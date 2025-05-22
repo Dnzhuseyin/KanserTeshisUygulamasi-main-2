@@ -52,7 +52,7 @@ fun ReportHistoryScreen(
                 userId = "user123",
                 imageUrl = "",
                 diagnosisResult = DiagnosisResult(
-                    cancerType = CancerType.MELANOMA,
+                    cancerType = CancerType.MALIGNANT,
                     confidencePercentage = 0.78f,
                     riskLevel = RiskLevel.HIGH
                 ),
@@ -63,7 +63,7 @@ fun ReportHistoryScreen(
                 userId = "user123",
                 imageUrl = "",
                 diagnosisResult = DiagnosisResult(
-                    cancerType = CancerType.BASAL_CELL_CARCINOMA,
+                    cancerType = CancerType.MALIGNANT,
                     confidencePercentage = 0.85f,
                     riskLevel = RiskLevel.MEDIUM
                 ),
@@ -289,9 +289,7 @@ fun ReportItem(
                 Text(
                     text = when (report.diagnosisResult?.cancerType) {
                         CancerType.BENIGN -> "İyi Huylu (Benign)"
-                        CancerType.MELANOMA -> "Melanoma"
-                        CancerType.BASAL_CELL_CARCINOMA -> "Bazal Hücreli Karsinom"
-                        CancerType.SQUAMOUS_CELL_CARCINOMA -> "Skuamöz Hücreli Karsinom"
+                        CancerType.MALIGNANT -> "Kötü Huylu (Malignant)"
                         else -> "Bilinmiyor"
                     },
                     fontSize = 16.sp,

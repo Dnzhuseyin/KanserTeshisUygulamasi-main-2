@@ -290,6 +290,7 @@ fun HomeScreen(
                                     painter = painterResource(
                                         id = when (latestReport.diagnosisResult.cancerType) {
                                             com.example.fonksiyonel.model.CancerType.BENIGN -> R.drawable.ic_check_circle
+                                            com.example.fonksiyonel.model.CancerType.MALIGNANT -> R.drawable.ic_warning
                                             else -> R.drawable.ic_warning
                                         }
                                     ),
@@ -308,9 +309,7 @@ fun HomeScreen(
                                 Text(
                                     text = when (latestReport.diagnosisResult.cancerType) {
                                         com.example.fonksiyonel.model.CancerType.BENIGN -> "İyi Huylu (Benign)"
-                                        com.example.fonksiyonel.model.CancerType.MELANOMA -> "Melanoma"
-                                        com.example.fonksiyonel.model.CancerType.BASAL_CELL_CARCINOMA -> "Bazal Hücreli Karsinom"
-                                        com.example.fonksiyonel.model.CancerType.SQUAMOUS_CELL_CARCINOMA -> "Skuamöz Hücreli Karsinom"
+                                        com.example.fonksiyonel.model.CancerType.MALIGNANT -> "Kötü Huylu (Malignant)"
                                         else -> "Bilinmiyor"
                                     },
                                     fontSize = 16.sp,

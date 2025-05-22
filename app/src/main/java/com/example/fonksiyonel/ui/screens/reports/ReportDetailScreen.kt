@@ -160,6 +160,7 @@ fun ReportDetailScreen(
                             painter = painterResource(
                                 id = when (report.diagnosisResult?.cancerType) {
                                     CancerType.BENIGN -> R.drawable.ic_check_circle
+                                    CancerType.MALIGNANT -> R.drawable.ic_warning
                                     else -> R.drawable.ic_warning
                                 }
                             ),
@@ -175,9 +176,7 @@ fun ReportDetailScreen(
                     Text(
                         text = when (report.diagnosisResult?.cancerType) {
                             CancerType.BENIGN -> "İyi Huylu (Benign)"
-                            CancerType.MELANOMA -> "Melanoma"
-                            CancerType.BASAL_CELL_CARCINOMA -> "Bazal Hücreli Karsinom"
-                            CancerType.SQUAMOUS_CELL_CARCINOMA -> "Skuamöz Hücreli Karsinom"
+                            CancerType.MALIGNANT -> "Kötü Huylu (Malignant)"
                             else -> "Bilinmiyor"
                         },
                         fontSize = 24.sp,
