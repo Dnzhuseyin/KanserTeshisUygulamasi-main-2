@@ -56,66 +56,92 @@ class SkinCancerClassifier(private val context: Context) {
             val model = loadModelFile()
             val options = Interpreter.Options()
             interpreter = Interpreter(model, options)
-            Log.d(TAG, "Model loaded successfully")
+            Log.d(TAG, "Model loaded successfully: $modelName")
         } catch (e: IOException) {
-            Log.e(TAG, "Error loading model", e)
+            Log.e(TAG, "Error loading model: ${e.message}", e)
         }
     }
 
     @Throws(IOException::class)
     private fun loadModelFile(): MappedByteBuffer {
-        val assetManager = context.assets
-        val fileDescriptor = assetManager.openFd(modelName)
-        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
-        val fileChannel = inputStream.channel
-        val startOffset = fileDescriptor.startOffset
-        val declaredLength = fileDescriptor.declaredLength
-        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
+        try {
+            val assetManager = context.assets
+            val fileDescriptor = assetManager.openFd(modelName)
+            val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
+            val fileChannel = inputStream.channel
+            val startOffset = fileDescriptor.startOffset
+            val declaredLength = fileDescriptor.declaredLength
+            Log.d(TAG, "Model file size: $declaredLength bytes")
+            return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
+        } catch (e: IOException) {
+            Log.e(TAG, "Error loading model file: ${e.message}")
+            throw e
+        }
     }
 
     /**
      * Modelin ham çıktısını döndüren fonksiyon
      */
     fun getModelRawOutput(uri: Uri): ModelOutput {
-        // Load and preprocess the image
-        val bitmap = loadAndResizeBitmap(uri, inputSize, inputSize)
-        
-        // Prepare input buffer
-        val inputBuffer = ByteBuffer.allocateDirect(4 * inputSize * inputSize * 3)
-        inputBuffer.order(ByteOrder.nativeOrder())
-        
-        // Normalize pixel values to [0, 1]
-        val pixels = IntArray(inputSize * inputSize)
-        bitmap.getPixels(pixels, 0, inputSize, 0, 0, inputSize, inputSize)
-        
-        for (pixelValue in pixels) {
-            // Extract RGB values
-            val r = (pixelValue shr 16 and 0xFF) / 255.0f
-            val g = (pixelValue shr 8 and 0xFF) / 255.0f
-            val b = (pixelValue and 0xFF) / 255.0f
+        try {
+            // Load and preprocess the image
+            val bitmap = loadAndResizeBitmap(uri, inputSize, inputSize)
+            Log.d(TAG, "Image loaded and resized to ${inputSize}x${inputSize}")
             
-            // TensorFlow Lite expects RGB values
-            inputBuffer.putFloat(r)
-            inputBuffer.putFloat(g)
-            inputBuffer.putFloat(b)
+            // Prepare input buffer - Ensure buffer is cleared before use
+            val inputBuffer = ByteBuffer.allocateDirect(4 * inputSize * inputSize * 3)
+            inputBuffer.order(ByteOrder.nativeOrder())
+            inputBuffer.rewind() // Reset position to beginning
+            
+            // Normalize pixel values to [0, 1]
+            val pixels = IntArray(inputSize * inputSize)
+            bitmap.getPixels(pixels, 0, inputSize, 0, 0, inputSize, inputSize)
+            
+            // Log a sample of pixels to verify data
+            Log.d(TAG, "Sample pixel value: ${pixels[inputSize * inputSize / 2]}")
+            
+            for (pixelValue in pixels) {
+                // Extract RGB values
+                val r = (pixelValue shr 16 and 0xFF) / 255.0f
+                val g = (pixelValue shr 8 and 0xFF) / 255.0f
+                val b = (pixelValue and 0xFF) / 255.0f
+                
+                // TensorFlow Lite expects RGB values
+                inputBuffer.putFloat(r)
+                inputBuffer.putFloat(g)
+                inputBuffer.putFloat(b)
+            }
+            
+            // Rewind buffer to prepare for reading
+            inputBuffer.rewind()
+            
+            // Prepare output buffer
+            val outputBuffer = Array(1) { FloatArray(numClasses) }
+            
+            // Run inference
+            Log.d(TAG, "Running model inference...")
+            interpreter?.run(inputBuffer, outputBuffer)
+            
+            // Get raw model output
+            val rawOutput = outputBuffer[0]
+            Log.d(TAG, "Raw model output: ${rawOutput.contentToString()}")
+            
+            // Yüzdelik değerlere dönüştür (opsiyonel)
+            val percentages = rawOutput.map { (it * 100).roundToInt() / 100f }
+            Log.d(TAG, "Output percentages: ${percentages}")
+            
+            return ModelOutput(
+                rawOutputs = rawOutput,
+                percentages = percentages.toList()
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in model inference: ${e.message}", e)
+            // Return default values on error
+            return ModelOutput(
+                rawOutputs = FloatArray(numClasses) { 0f },
+                percentages = List(numClasses) { 0f }
+            )
         }
-        
-        // Prepare output buffer
-        val outputBuffer = Array(1) { FloatArray(numClasses) }
-        
-        // Run inference
-        interpreter?.run(inputBuffer, outputBuffer)
-        
-        // Get raw model output
-        val rawOutput = outputBuffer[0]
-        
-        // Yüzdelik değerlere dönüştür (opsiyonel)
-        val percentages = rawOutput.map { (it * 100).roundToInt() / 100f }
-        
-        return ModelOutput(
-            rawOutputs = rawOutput,
-            percentages = percentages.toList()
-        )
     }
     
     /**
