@@ -115,18 +115,21 @@ class SkinCancerClassifier(private val context: Context) {
             // Rewind buffer to prepare for reading
             inputBuffer.rewind()
             
-            // Prepare output buffer
-            val outputBuffer = Array(1) { FloatArray(numClasses) }
+            // Prepare output buffer for single value
+            val outputBuffer = Array(1) { FloatArray(1) }
             
             // Run inference
             Log.d(TAG, "Running model inference...")
             interpreter?.run(inputBuffer, outputBuffer)
             
-            // Get raw model output
-            val rawOutput = outputBuffer[0]
-            Log.d(TAG, "Raw model output: ${rawOutput.contentToString()}")
+            // Get raw model output (malignant probability)
+            val malignantProb = outputBuffer[0][0]
+            Log.d(TAG, "Raw model output (malignant probability): $malignantProb")
             
-            // Yüzdelik değerlere dönüştür (opsiyonel)
+            // Convert to two class format [benign_prob, malignant_prob]
+            val rawOutput = floatArrayOf(1 - malignantProb, malignantProb)
+            
+            // Yüzdelik değerlere dönüştür
             val percentages = rawOutput.map { (it * 100).roundToInt() / 100f }
             Log.d(TAG, "Output percentages: ${percentages}")
             
