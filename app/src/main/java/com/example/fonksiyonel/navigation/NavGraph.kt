@@ -9,6 +9,7 @@ import com.example.fonksiyonel.ui.screens.appointment.AppointmentScreen
 import com.example.fonksiyonel.ui.screens.auth.LoginScreen
 import com.example.fonksiyonel.ui.screens.auth.RegisterScreen
 import com.example.fonksiyonel.ui.screens.badges.BadgesScreen
+import com.example.fonksiyonel.ui.screens.doctor.CovidScanScreen
 import com.example.fonksiyonel.ui.screens.doctor.DoctorHomeScreen
 import com.example.fonksiyonel.ui.screens.home.HomeScreen
 import com.example.fonksiyonel.ui.screens.reports.ReportDetailScreen
@@ -26,6 +27,7 @@ sealed class Screen(val route: String) {
         fun createRoute(reportId: String) = "report_detail/$reportId"
     }
     object Scan : Screen("scan")
+    object CovidScan : Screen("covid_scan")
     object ShareWithDoctor : Screen("share_with_doctor/{reportId}") {
         fun createRoute(reportId: String) = "share_with_doctor/$reportId"
     }
@@ -110,10 +112,26 @@ fun NavGraph(
                 onNavigateToReportDetail = { reportId ->
                     navController.navigate(Screen.ReportDetail.createRoute(reportId))
                 },
+                onNavigateToCovidScan = {
+                    navController.navigate(Screen.CovidScan.route)
+                },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.DoctorHome.route) { inclusive = true }
                     }
+                }
+            )
+        }
+        
+        composable(Screen.CovidScan.route) {
+            CovidScanScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onScanComplete = { covidReport ->
+                    // Gerçek uygulamada burada raporu veritabanına kaydedip
+                    // belki bir detay sayfasına yönlendirme yapılabilir
+                    navController.popBackStack()
                 }
             )
         }
