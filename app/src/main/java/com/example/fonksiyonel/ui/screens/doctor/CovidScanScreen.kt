@@ -30,6 +30,7 @@ import com.example.fonksiyonel.R
 import com.example.fonksiyonel.model.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
