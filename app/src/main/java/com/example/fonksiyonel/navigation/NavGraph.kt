@@ -1,9 +1,13 @@
 package com.example.fonksiyonel.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.fonksiyonel.model.Badge
+import com.example.fonksiyonel.model.User
 import com.example.fonksiyonel.model.UserType
 import com.example.fonksiyonel.ui.screens.appointment.AppointmentScreen
 import com.example.fonksiyonel.ui.screens.auth.LoginScreen
@@ -40,6 +44,11 @@ fun NavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Login.route
 ) {
+    // Oturum açmış kullanıcı bilgisi için state tutuyoruz
+    val currentUser = remember { 
+        mutableStateOf<User?>(null) 
+    }
+    
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -50,6 +59,30 @@ fun NavGraph(
                     navController.navigate(Screen.Register.route)
                 },
                 onLoginSuccess = { userType ->
+                    // Kullanıcı giriş yaptığında kullanıcı bilgilerini oluştur
+                    val user = User(
+                        id = "user_${System.currentTimeMillis()}",
+                        name = if (userType == UserType.DOCTOR) "Dr. Mehmet Demir" else "Ahmet Yılmaz",
+                        email = if (userType == UserType.DOCTOR) "dr.mehmet@example.com" else "ahmet@example.com",
+                        userType = userType,
+                        profilePhotoUrl = null,
+                        points = if (userType == UserType.PATIENT) 120 else 0,
+                        badges = if (userType == UserType.PATIENT) {
+                            listOf(
+                                Badge(
+                                    id = "badge1",
+                                    title = "İlk Tarama",
+                                    description = "İlk taramanızı gerçekleştirdiniz",
+                                    earnedDate = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
+                                )
+                            )
+                        } else emptyList(),
+                        lastAnalysisDate = if (userType == UserType.PATIENT) System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000 else null
+                    )
+                    
+                    // Kullanıcı state'ini güncelle
+                    currentUser.value = user
+                    
                     if (userType == UserType.DOCTOR) {
                         navController.navigate(Screen.DoctorHome.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
@@ -69,6 +102,30 @@ fun NavGraph(
                     navController.popBackStack()
                 },
                 onRegisterSuccess = { userType ->
+                    // Kayıt olan kullanıcı için bilgiler oluşturulur
+                    val user = User(
+                        id = "user_${System.currentTimeMillis()}",
+                        name = if (userType == UserType.DOCTOR) "Dr. Mehmet Demir" else "Ahmet Yılmaz",
+                        email = if (userType == UserType.DOCTOR) "dr.mehmet@example.com" else "ahmet@example.com",
+                        userType = userType,
+                        profilePhotoUrl = null,
+                        points = if (userType == UserType.PATIENT) 120 else 0,
+                        badges = if (userType == UserType.PATIENT) {
+                            listOf(
+                                Badge(
+                                    id = "badge1",
+                                    title = "İlk Tarama",
+                                    description = "İlk taramanızı gerçekleştirdiniz",
+                                    earnedDate = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
+                                )
+                            )
+                        } else emptyList(),
+                        lastAnalysisDate = if (userType == UserType.PATIENT) System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000 else null
+                    )
+                    
+                    // Kullanıcı state'ini güncelle
+                    currentUser.value = user
+                    
                     if (userType == UserType.DOCTOR) {
                         navController.navigate(Screen.DoctorHome.route) {
                             popUpTo(Screen.Register.route) { inclusive = true }
@@ -83,7 +140,16 @@ fun NavGraph(
         }
         
         composable(Screen.Home.route) {
+            // Kullanıcı bilgisi yoksa varsayılan oluşturulur (normalde bu duruma düşmemeli)
+            val user = currentUser.value ?: User(
+                id = "default_user",
+                name = "Ahmet Yılmaz",
+                email = "ahmet@example.com",
+                userType = UserType.PATIENT
+            )
+            
             HomeScreen(
+                currentUser = user,
                 onNavigateToReportHistory = {
                     navController.navigate(Screen.ReportHistory.route)
                 },
@@ -100,6 +166,8 @@ fun NavGraph(
                     navController.navigate(Screen.ReportDetail.createRoute(reportId))
                 },
                 onLogout = {
+                    // Çıkış yapıldığında kullanıcı bilgisi sıfırlanır
+                    currentUser.value = null
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }

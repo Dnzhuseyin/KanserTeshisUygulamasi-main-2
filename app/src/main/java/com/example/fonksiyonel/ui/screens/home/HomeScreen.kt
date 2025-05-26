@@ -33,6 +33,7 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    currentUser: User,
     onNavigateToReportHistory: () -> Unit,
     onNavigateToScan: () -> Unit,
     onNavigateToAppointment: () -> Unit,
@@ -40,25 +41,6 @@ fun HomeScreen(
     onNavigateToReportDetail: (String) -> Unit,
     onLogout: () -> Unit
 ) {
-    // In a real app, this would come from a ViewModel
-    val currentUser = remember {
-        User(
-            id = "user123",
-            name = "Ahmet Yılmaz",
-            email = "ahmet@example.com",
-            profilePhotoUrl = null,
-            points = 120,
-            badges = listOf(
-                Badge(
-                    id = "badge1",
-                    title = "İlk Tarama",
-                    description = "İlk taramanızı gerçekleştirdiniz",
-                    earnedDate = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
-                )
-            ),
-            lastAnalysisDate = System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000
-        )
-    }
     
     val latestReport = remember {
         Report(
