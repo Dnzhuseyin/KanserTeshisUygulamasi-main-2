@@ -22,10 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.fonksiyonel.R
-import com.example.fonksiyonel.model.CancerType
-import com.example.fonksiyonel.model.DiagnosisResult
-import com.example.fonksiyonel.model.Report
-import com.example.fonksiyonel.model.RiskLevel
+import com.example.fonksiyonel.model.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -37,6 +34,27 @@ fun DoctorHomeScreen(
     onLogout: () -> Unit
 ) {
     // In a real app, this would come from a ViewModel
+    val pendingAppointments = remember {
+        listOf(
+            Appointment(
+                id = "appointment1",
+                patientId = "user1",
+                doctorId = "doctor123",
+                date = System.currentTimeMillis() + 2 * 24 * 60 * 60 * 1000, // 2 gün sonra
+                description = "Cilt lezyonu kontrolü",
+                status = AppointmentStatus.PENDING
+            ),
+            Appointment(
+                id = "appointment2",
+                patientId = "user2",
+                doctorId = "doctor123",
+                date = System.currentTimeMillis() + 5 * 24 * 60 * 60 * 1000, // 5 gün sonra
+                description = "Periyodik kontrol",
+                status = AppointmentStatus.PENDING
+            )
+        )
+    }
+    
     val patientReports = remember {
         listOf(
             Report(
@@ -123,78 +141,123 @@ fun DoctorHomeScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Doctor Profile Card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Row(
+            item {
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(bottom = 24.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
-                    // Profile Photo
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .size(60.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "D",
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.width(16.dp))
-                    
-                    // Doctor Info
-                    Column {
-                        Text(
-                            text = "Dr. Mehmet Demir",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        // Profile Photo
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "D",
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                         
-                        Text(
-                            text = "Dermatoloji Uzmanı",
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
+                        Spacer(modifier = Modifier.width(16.dp))
                         
-                        Text(
-                            text = "mehmet.demir@example.com",
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
+                        // Doctor Info
+                        Column {
+                            Text(
+                                text = "Dr. Mehmet Demir",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            
+                            Text(
+                                text = "Dermatoloji Uzmanı",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                            
+                            Text(
+                                text = "mehmet.demir@example.com",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                        }
                     }
                 }
             }
             
+            // Pending Appointments Section
+            if (pendingAppointments.isNotEmpty()) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Bekleyen Randevular",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        // Badge showing number of pending appointments
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.error),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "${pendingAppointments.size}",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+                
+                // List of pending appointments
+                items(pendingAppointments) { appointment ->
+                    AppointmentNotificationItem(appointment = appointment)
+                }
+                
+                item {
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                }
+            }
+            
             // Reports Title
-            Text(
-                text = "Hasta Raporları",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                textAlign = TextAlign.Start
-            )
+            item {
+                Text(
+                    text = "Hasta Raporları",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    textAlign = TextAlign.Start
+                )
+            }
             
             // Reports List
             if (patientReports.isEmpty()) {
@@ -265,6 +328,98 @@ fun DoctorHomeScreen(
                             onClick = { onNavigateToReportDetail(report.id) }
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AppointmentNotificationItem(appointment: Appointment) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Appointment Info
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Hasta ID: ${appointment.patientId}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Text(
+                        text = appointment.description,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Date
+                    Text(
+                        text = "Tarih: ${SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(Date(appointment.date))}",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                // Status Badge
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = when(appointment.status) {
+                            AppointmentStatus.PENDING -> "Bekliyor"
+                            AppointmentStatus.CONFIRMED -> "Onaylandı"
+                            AppointmentStatus.CANCELLED -> "İptal"
+                            AppointmentStatus.COMPLETED -> "Tamamlandı"
+                        },
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Action Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                OutlinedButton(
+                    onClick = { /* Reject appointment */ },
+                    modifier = Modifier.padding(end = 8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Reddet")
+                }
+                
+                Button(
+                    onClick = { /* Confirm appointment */ }
+                ) {
+                    Text("Onayla")
                 }
             }
         }
