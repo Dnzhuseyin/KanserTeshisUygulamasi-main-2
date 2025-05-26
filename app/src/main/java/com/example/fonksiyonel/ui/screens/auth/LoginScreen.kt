@@ -26,7 +26,7 @@ import com.example.fonksiyonel.model.UserType
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: (UserType) -> Unit
+    onLoginSuccess: (UserType, String, String) -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -148,7 +148,10 @@ fun LoginScreen(
                     if (email.isNotBlank() && password.isNotBlank()) {
                         // Simulate network delay
                         // In a real app, this would be a call to your authentication service
-                        onLoginSuccess(selectedUserType)
+                        
+                        // Kullanıcı bilgilerini giriş bilgileriyle iletiyoruz
+                        val displayName = email.substringBefore("@").capitalize()
+                        onLoginSuccess(selectedUserType, email, displayName)
                     } else {
                         isLoading = false
                         errorMessage = "Lütfen e-posta ve şifrenizi girin"

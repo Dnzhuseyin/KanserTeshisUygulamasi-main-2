@@ -37,7 +37,7 @@ import com.example.fonksiyonel.model.UserType
 @Composable
 fun RegisterScreen(
     onNavigateBack: () -> Unit,
-    onRegisterSuccess: (UserType) -> Unit
+    onRegisterSuccess: (UserType, String, String, String?) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -283,7 +283,7 @@ fun RegisterScreen(
                         else -> {
                             // Simulate registration (replace with actual authentication)
                             // In a real app, this would be a call to your authentication service
-                            onRegisterSuccess(selectedUserType)
+                            onRegisterSuccess(selectedUserType, email, name, profileImageUri)
                         }
                     }
                 },

@@ -58,12 +58,13 @@ fun NavGraph(
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
                 },
-                onLoginSuccess = { userType ->
+                onLoginSuccess = { userType, email, displayName ->
                     // Kullanıcı giriş yaptığında kullanıcı bilgilerini oluştur
+                    // Artık girişte girilen bilgileri kullanıyoruz
                     val user = User(
                         id = "user_${System.currentTimeMillis()}",
-                        name = if (userType == UserType.DOCTOR) "Dr. Mehmet Demir" else "Ahmet Yılmaz",
-                        email = if (userType == UserType.DOCTOR) "dr.mehmet@example.com" else "ahmet@example.com",
+                        name = if (userType == UserType.DOCTOR) "Dr. $displayName" else displayName,
+                        email = email,
                         userType = userType,
                         profilePhotoUrl = null,
                         points = if (userType == UserType.PATIENT) 120 else 0,
@@ -101,14 +102,15 @@ fun NavGraph(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onRegisterSuccess = { userType ->
+                onRegisterSuccess = { userType, email, name, profileImageUri ->
                     // Kayıt olan kullanıcı için bilgiler oluşturulur
+                    // Artık kayıt ekranından gelen gerçek bilgileri kullanıyoruz
                     val user = User(
                         id = "user_${System.currentTimeMillis()}",
-                        name = if (userType == UserType.DOCTOR) "Dr. Mehmet Demir" else "Ahmet Yılmaz",
-                        email = if (userType == UserType.DOCTOR) "dr.mehmet@example.com" else "ahmet@example.com",
+                        name = if (userType == UserType.DOCTOR) "Dr. $name" else name,
+                        email = email,
                         userType = userType,
-                        profilePhotoUrl = null,
+                        profilePhotoUrl = profileImageUri,
                         points = if (userType == UserType.PATIENT) 120 else 0,
                         badges = if (userType == UserType.PATIENT) {
                             listOf(
