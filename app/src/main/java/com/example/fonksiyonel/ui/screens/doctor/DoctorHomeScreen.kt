@@ -29,8 +29,10 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DoctorHomeScreen(
+    currentUser: User,
     onNavigateToReportDetail: (String) -> Unit,
     onNavigateToCovidScan: () -> Unit,
+    onSettingsClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     // In a real app, this would come from a ViewModel
@@ -171,12 +173,21 @@ fun DoctorHomeScreen(
                                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "D",
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            if (currentUser.profilePhotoUrl != null) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(currentUser.profilePhotoUrl),
+                                    contentDescription = "Profile Photo",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Text(
+                                    text = currentUser.name.first().toString(),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                         
                         Spacer(modifier = Modifier.width(16.dp))
@@ -184,7 +195,7 @@ fun DoctorHomeScreen(
                         // Doctor Info
                         Column {
                             Text(
-                                text = "Dr. Mehmet Demir",
+                                text = currentUser.name,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -196,7 +207,7 @@ fun DoctorHomeScreen(
                             )
                             
                             Text(
-                                text = "mehmet.demir@example.com",
+                                text = currentUser.email,
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
@@ -241,73 +252,112 @@ fun DoctorHomeScreen(
                     AppointmentNotificationItem(appointment = appointment)
                 }
                 
-                item {
-                    Divider(modifier = Modifier.padding(vertical = 8.dp))
-                }
             }
-            
-            // Reports Title
-            item {
-                Text(
-                    text = "Hasta Raporları",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+        )
+    }
+) { paddingValues ->
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Doctor Profile Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    textAlign = TextAlign.Start
-                )
-            }
-            
-            // Reports List
-            item {
-                if (patientReports.isEmpty()) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Profile Photo
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.Center
                     ) {
+                        if (currentUser.profilePhotoUrl != null) {
+                            Image(
+                                painter = rememberAsyncImagePainter(currentUser.profilePhotoUrl),
+                                contentDescription = "Profile Photo",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Text(
+                                text = currentUser.name.first().toString(),
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.width(16.dp))
+                    
+                    // Doctor Info
+                    Column {
                         Text(
-                            text = "Henüz paylaşılan rapor bulunmamaktadır",
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                            text = currentUser.name,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
                         )
                         
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Dermatoloji Uzmanı",
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
                         
-                        Button(
-                            onClick = onNavigateToCovidScan,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                                .height(56.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_scan),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Text(
-                                    text = "COVID-19 Taraması Yap",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
+                        Text(
+                            text = currentUser.email,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
                     }
                 }
             }
-            
-            // Patient Reports Items
-            items(patientReports) { report ->
-                PatientReportItem(
+        }
+        
+        // Pending Appointments Section
+        if (pendingAppointments.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Bekleyen Randevular",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    // Badge showing number of pending appointments
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.error),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "${pendingAppointments.size}",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
                     report = report,
                     onClick = { onNavigateToReportDetail(report.id) }
                 )
@@ -332,6 +382,26 @@ fun DoctorHomeScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("COVID-19 Taraması Yap")
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // Ayarlar Butonu
+                    OutlinedButton(
+                        onClick = onSettingsClick,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_settings),
+                                contentDescription = null
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Ayarlar")
                         }
                     }
                 }

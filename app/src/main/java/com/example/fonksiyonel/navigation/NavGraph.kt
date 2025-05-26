@@ -19,6 +19,7 @@ import com.example.fonksiyonel.ui.screens.home.HomeScreen
 import com.example.fonksiyonel.ui.screens.reports.ReportDetailScreen
 import com.example.fonksiyonel.ui.screens.reports.ReportHistoryScreen
 import com.example.fonksiyonel.ui.screens.scan.ScanScreen
+import com.example.fonksiyonel.ui.screens.settings.SettingsScreen
 import com.example.fonksiyonel.ui.screens.share.ShareWithDoctorScreen
 
 sealed class Screen(val route: String) {
@@ -37,6 +38,7 @@ sealed class Screen(val route: String) {
     }
     object Appointment : Screen("appointment")
     object Badges : Screen("badges")
+    object Settings : Screen("settings")
 }
 
 @Composable
@@ -167,25 +169,42 @@ fun NavGraph(
                 onNavigateToReportDetail = { reportId ->
                     navController.navigate(Screen.ReportDetail.createRoute(reportId))
                 },
+                onSettingsClick = {
+                    navController.navigate(Screen.Settings.route)
+                },
                 onLogout = {
                     // Çıkış yapıldığında kullanıcı bilgisi sıfırlanır
                     currentUser.value = null
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Home.route) { inclusive = true }
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                     }
                 }
             )
         }
         
         composable(Screen.DoctorHome.route) {
+            // Kullanıcı bilgisi yoksa varsayılan oluşturulur (normalde bu duruma düşmemeli)
+            val user = currentUser.value ?: User(
+                id = "default_doctor",
+                name = "Dr. Mehmet Demir",
+                email = "dr.mehmet@example.com",
+                userType = UserType.DOCTOR
+            )
+            
             DoctorHomeScreen(
+                currentUser = user,
                 onNavigateToReportDetail = { reportId ->
                     navController.navigate(Screen.ReportDetail.createRoute(reportId))
                 },
                 onNavigateToCovidScan = {
                     navController.navigate(Screen.CovidScan.route)
                 },
+                onSettingsClick = {
+                    navController.navigate(Screen.Settings.route)
+                },
                 onLogout = {
+                    // Çıkış yapıldığında kullanıcı bilgisi sıfırlanır
+                    currentUser.value = null
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.DoctorHome.route) { inclusive = true }
                     }
@@ -268,9 +287,46 @@ fun NavGraph(
         }
         
         composable(Screen.Badges.route) {
+            // Kullanıcı bilgisi yoksa varsayılan oluşturulur
+            val user = currentUser.value ?: User(
+                id = "default_user",
+                name = "Ahmet Yılmaz",
+                email = "ahmet@example.com",
+                userType = UserType.PATIENT
+            )
+            
+            // Tarama sayısı - gerçek uygulamada veritabanından alınır
+            val scanCount = 5
+            
             BadgesScreen(
+                currentUser = user,
+                scanCount = scanCount,
                 onNavigateBack = {
                     navController.popBackStack()
+                }
+            )
+        }
+        
+        composable(Screen.Settings.route) {
+            // Kullanıcı bilgisi yoksa varsayılan oluşturulur
+            val user = currentUser.value ?: User(
+                id = "default_user",
+                name = "Ahmet Yılmaz",
+                email = "ahmet@example.com",
+                userType = UserType.PATIENT
+            )
+            
+            SettingsScreen(
+                currentUser = user,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onLogout = {
+                    // Çıkış yapıldığında kullanıcı bilgisi sıfırlanır
+                    currentUser.value = null
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Settings.route) { inclusive = true }
+                    }
                 }
             )
         }

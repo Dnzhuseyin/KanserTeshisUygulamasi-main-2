@@ -39,6 +39,7 @@ fun HomeScreen(
     onNavigateToAppointment: () -> Unit,
     onNavigateToBadges: () -> Unit,
     onNavigateToReportDetail: (String) -> Unit,
+    onSettingsClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     
@@ -278,7 +279,7 @@ fun HomeScreen(
                                     ),
                                     contentDescription = null,
                                     tint = Color.White,
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.padding(12.dp)
                                 )
                             }
                             
@@ -407,7 +408,7 @@ fun HomeScreen(
                     icon = R.drawable.ic_settings,
                     title = "Ayarlar",
                     modifier = Modifier.weight(1f),
-                    onClick = { /* Navigate to settings */ }
+                    onClick = onSettingsClick
                 )
             }
         }

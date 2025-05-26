@@ -26,65 +26,142 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BadgesScreen(
+    currentUser: User,
+    scanCount: Int,
     onNavigateBack: () -> Unit
 ) {
-    // In a real app, this would come from a ViewModel
-    val badges = remember {
-        listOf(
-            Badge(
+    // Kullanıcının kazandığı rozetleri hesaplıyoruz
+    val earnedBadges = remember(currentUser, scanCount) {
+        val badges = mutableListOf<Badge>()
+        
+        // İlk tarama rozeti - en az 1 tarama yapıldığında kazanılır
+        if (scanCount >= 1) {
+            badges.add(Badge(
                 id = "badge1",
                 title = "İlk Tarama",
-                description = "İlk taramanızı gerçekleştirdiniz",
-                earnedDate = System.currentTimeMillis() - 30 * 24 * 60 * 60 * 1000
-            ),
-            Badge(
+                description = "İlk taramanızı gerçekleştirdiniz. Sağlığınıza önem verdiğiniz için tebrikler!",
+                earnedDate = currentUser.lastAnalysisDate ?: System.currentTimeMillis()
+            ))
+        }
+        
+        // 5 Tarama rozeti
+        if (scanCount >= 5) {
+            badges.add(Badge(
                 id = "badge2",
                 title = "5 Tarama",
-                description = "5 tarama gerçekleştirdiniz",
+                description = "5 tarama gerçekleştirerek düzenli kontrol alışkanlığı kazandınız.",
                 earnedDate = System.currentTimeMillis() - 15 * 24 * 60 * 60 * 1000
-            ),
-            Badge(
+            ))
+        }
+        
+        // 10 Tarama rozeti
+        if (scanCount >= 10) {
+            badges.add(Badge(
                 id = "badge3",
-                title = "Düzenli Kullanıcı",
-                description = "Uygulamayı 30 gün boyunca düzenli olarak kullandınız",
+                title = "10 Tarama",
+                description = "10 tarama gerçekleştirerek sağlık takibinde uzmanlaştınız!",
                 earnedDate = System.currentTimeMillis() - 5 * 24 * 60 * 60 * 1000
-            ),
-            Badge(
+            ))
+        }
+        
+        // Düzenli kullanıcı rozeti - uygulama 30 gün boyunca kullanıldığında
+        if (currentUser.lastAnalysisDate != null && 
+            (System.currentTimeMillis() - currentUser.lastAnalysisDate) >= 30 * 24 * 60 * 60 * 1000L) {
+            badges.add(Badge(
                 id = "badge4",
-                title = "Doktor Paylaşımı",
-                description = "İlk kez bir raporu doktor ile paylaştınız",
-                earnedDate = System.currentTimeMillis() - 10 * 24 * 60 * 60 * 1000
-            ),
-            Badge(
-                id = "badge5",
-                title = "Randevu Tamamlama",
-                description = "İlk randevunuzu başarıyla tamamladınız",
-                earnedDate = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
-            )
-        )
+                title = "Düzenli Kullanıcı",
+                description = "Uygulamaıyı 30 gün boyunca düzenli olarak kullandınız. Sağlığınız için gösterdiğiniz özen takdire şayan!",
+                earnedDate = System.currentTimeMillis() - 5 * 24 * 60 * 60 * 1000
+            ))
+        }
+        
+        // Mevcut rozetleri de ekliyoruz
+        currentUser.badges.forEach { badge ->
+            if (!badges.any { it.id == badge.id }) {
+                badges.add(badge)
+            }
+        }
+        
+        badges
     }
     
-    val lockedBadges = remember {
-        listOf(
-            Badge(
-                id = "badge6",
+    // Henüz kazanılmamış rozetler
+    val lockedBadges = remember(earnedBadges) {
+        val badges = mutableListOf<Badge>()
+        
+        // İlk tarama rozeti kontrolü
+        if (earnedBadges.none { it.id == "badge1" }) {
+            badges.add(Badge(
+                id = "badge1",
+                title = "İlk Tarama",
+                description = "İlk taramanızı gerçekleştirin",
+                earnedDate = 0
+            ))
+        }
+        
+        // 5 Tarama rozeti kontrolü
+        if (earnedBadges.none { it.id == "badge2" }) {
+            badges.add(Badge(
+                id = "badge2",
+                title = "5 Tarama",
+                description = "5 tarama gerçekleştirin",
+                earnedDate = 0
+            ))
+        }
+        
+        // 10 Tarama rozeti kontrolü
+        if (earnedBadges.none { it.id == "badge3" }) {
+            badges.add(Badge(
+                id = "badge3",
                 title = "10 Tarama",
                 description = "10 tarama gerçekleştirin",
                 earnedDate = 0
-            ),
-            Badge(
-                id = "badge7",
-                title = "Uzman Kullanıcı",
-                description = "Uygulamayı 90 gün boyunca düzenli olarak kullanın",
+            ))
+        }
+        
+        // Diğer kilitli rozetler
+        if (earnedBadges.none { it.id == "badge4" }) {
+            badges.add(Badge(
+                id = "badge4",
+                title = "Düzenli Kullanıcı",
+                description = "Uygulamaıyı 30 gün boyunca düzenli olarak kullanın",
                 earnedDate = 0
-            ),
-            Badge(
-                id = "badge8",
-                title = "Sağlık Elçisi",
-                description = "5 farklı doktor ile rapor paylaşın",
-                earnedDate = 0
-            )
-        )
+            ))
+        }
+        
+        // Uzman kullanıcı rozeti
+        badges.add(Badge(
+            id = "badge5",
+            title = "Uzman Kullanıcı",
+            description = "Uygulamaıyı 90 gün boyunca düzenli olarak kullanın",
+            earnedDate = 0
+        ))
+        
+        // Sağlık elçisi rozeti
+        badges.add(Badge(
+            id = "badge6",
+            title = "Sağlık Elçisi",
+            description = "5 farklı doktor ile rapor paylaşın",
+            earnedDate = 0
+        ))
+        
+        // Doktor paylaşımı rozeti
+        badges.add(Badge(
+            id = "badge7",
+            title = "Doktor Paylaşımı",
+            description = "İlk kez bir raporu doktor ile paylaşın",
+            earnedDate = 0
+        ))
+        
+        // Randevu tamamlama rozeti
+        badges.add(Badge(
+            id = "badge8",
+            title = "Randevu Tamamlama",
+            description = "İlk randevunuzu başarıyla tamamlayın",
+            earnedDate = 0
+        ))
+        
+        badges
     }
     
     var selectedBadge by remember { mutableStateOf<Badge?>(null) }
@@ -138,7 +215,7 @@ fun BadgesScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Points and Progress
+            // User Stats
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -153,35 +230,97 @@ fun BadgesScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Toplam Puanınız",
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    )
-                    
-                    Text(
-                        text = "120",
-                        fontSize = 32.sp,
+                        text = "Rozet İstatistikleri",
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
                     
-                    LinearProgressIndicator(
-                        progress = { 0.6f },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(4.dp)),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                    )
-                    
-                    Text(
-                        text = "Bir sonraki seviyeye 80 puan kaldı",
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        // Total Badges
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "${earnedBadges.size}",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Text(
+                                text = "Kazandığınız",
+                                fontSize = 14.sp
+                            )
+                        }
+                        
+                        // Tarama Sayısı
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.tertiary),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "$scanCount",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Text(
+                                text = "Tarama",
+                                fontSize = 14.sp
+                            )
+                        }
+                        
+                        // Remaining Badges
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.secondary),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "${lockedBadges.size}",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            Text(
+                                text = "Kalan",
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
                 }
             }
             
@@ -204,7 +343,7 @@ fun BadgesScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(badges) { badge ->
+                items(earnedBadges) { badge ->
                     BadgeItem(
                         badge = badge,
                         isLocked = false,
