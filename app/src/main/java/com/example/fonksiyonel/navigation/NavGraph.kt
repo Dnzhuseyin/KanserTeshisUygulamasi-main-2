@@ -176,7 +176,7 @@ fun NavGraph(
                     // Çıkış yapıldığında kullanıcı bilgisi sıfırlanır
                     currentUser.value = null
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
                     }
                 }
             )
